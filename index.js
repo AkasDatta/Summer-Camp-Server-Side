@@ -27,11 +27,37 @@ async function run() {
     await client.connect();
 
     const classCollection = client.db("summerDb").collection("classes");
+    const userCollection = client.db("summerDb").collection("users");
+    const cartCollection = client.db("summerDb").collection("carts");
 
     // classes related apis
     app.get('/classes', async (req, res) => {
       const result = await classCollection.find().toArray();
       res.send(result);
+    })
+
+    // classes related apis
+    app.get('/users', async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    })
+
+    // cart collection
+    app.get('/carts', async(req, res) => {
+      const email = req.query.email;
+      console.log(email)
+      if(!email){
+        res.send([]);
+      }
+      const query = {email: email};
+      const result = await cartCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.post('/carts', async(req, res) => {
+        const item = req.body;
+        const result = await cartCollection.insertOne(item);
+        res.send(result);
     })
 
 
