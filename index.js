@@ -9,6 +9,23 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+const verifyJWT = (req, res, next) => {
+  const authorization = req.headers.authorization;
+  if(!authorization) {
+    return res.status(401).send({ error: true, message: 'unauthorized access'});
+  }
+  //bearer token
+  const token = authorization.split(' ')[1];
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if(err){
+      return res.status(401).send({error: true, message: 'unauthorized access'})
+    }
+    req.decoded = decoded;
+    next();
+  })
+}
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.cv3dsgq.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -34,7 +51,7 @@ async function run() {
     // jwt
     app.post('/jwt', (req, res) =>{
       const saveduser = req.body;
-      const token = jwt.sign(saveduser, env.process.ACCESS_TOKEN_SECRET, { expiresIn:'1h' })
+      const token = jwt.sign(saveduser, process.env.ACCESS_TOKEN_SECRET, { expiresIn:'1h' })
       res.send({token})
     })
 
@@ -82,12 +99,16 @@ async function run() {
       res.send(result);
     });
 
-    // cart collection
-    app.get('/carts', async (req, res) => {
+    // cart collection apis
+    app.get('/carts', verifyJWT, async (req, res) => {
       const email = req.query.email;
-      console.log(email);
       if (!email) {
         res.send([]);
+      }
+
+      const decodedEmail = req.decoded.email;
+      if(email !== decodedEmail){
+        return res.status(401).send({error: true, message: 'forbidden access'})
       }
       const query = { email: email };
       const result = await cartCollection.find(query).toArray();
