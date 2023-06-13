@@ -25,9 +25,18 @@ async function run() {
     // Connect the client to the server (optional starting in v4.7)
     await client.connect();
 
+    const savedusersCollection = client.db('summerDb').collection('savedusers');
     const classCollection = client.db('summerDb').collection('classes');
     const userCollection = client.db('summerDb').collection('users');
     const cartCollection = client.db('summerDb').collection('carts');
+
+    //savedusers related APIs
+    app.post('/savedusers', async(req, res) =>{
+      const saveduser = req.body;
+      const result = await savedusersCollection.insertOne(saveduser);
+      res.send(result);
+    })
+
 
     // classes related APIs
     app.get('/classes', async (req, res) => {
