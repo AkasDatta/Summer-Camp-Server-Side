@@ -33,6 +33,12 @@ async function run() {
     //savedusers related APIs
     app.post('/savedusers', async(req, res) =>{
       const saveduser = req.body;
+      const query = {email: saveduser.email}
+      const existingUser = await savedusersCollection.findOne(query);
+      if(existingUser) {
+        return res.send({message: 'User already exists'})
+      }
+
       const result = await savedusersCollection.insertOne(saveduser);
       res.send(result);
     })
