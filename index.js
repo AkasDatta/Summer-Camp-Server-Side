@@ -31,6 +31,11 @@ async function run() {
     const cartCollection = client.db('summerDb').collection('carts');
 
     //savedusers related APIs
+    app.get('/savedusers', async(req, res) => {
+      const result = await savedusersCollection.find().toArray();
+      res.send(result);
+    })
+    
     app.post('/savedusers', async(req, res) =>{
       const saveduser = req.body;
       const query = {email: saveduser.email}
