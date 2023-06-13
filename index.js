@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
@@ -29,6 +30,13 @@ async function run() {
     const classCollection = client.db('summerDb').collection('classes');
     const userCollection = client.db('summerDb').collection('users');
     const cartCollection = client.db('summerDb').collection('carts');
+
+    // jwt
+    app.post('/jwt', (req, res) =>{
+      const saveduser = req.body;
+      const token = jwt.sign(saveduser, env.process.ACCESS_TOKEN_SECRET, { expiresIn:'1h' })
+      res.send({token})
+    })
 
     //savedusers related APIs
     app.get('/savedusers', async(req, res) => {
