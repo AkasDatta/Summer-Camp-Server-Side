@@ -35,7 +35,7 @@ async function run() {
       const result = await savedusersCollection.find().toArray();
       res.send(result);
     })
-    
+
     app.post('/savedusers', async(req, res) =>{
       const saveduser = req.body;
       const query = {email: saveduser.email}
@@ -45,6 +45,19 @@ async function run() {
       }
 
       const result = await savedusersCollection.insertOne(saveduser);
+      res.send(result);
+    })
+    
+    app.patch('/savedusers/admin/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const updateDoc = {
+        $set: {
+          role: 'admin'
+        }
+      };
+
+      const result = await savedusersCollection.updateOne(filter, updateDoc);
       res.send(result);
     })
 
