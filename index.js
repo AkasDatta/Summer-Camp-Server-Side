@@ -187,9 +187,17 @@ async function run() {
         res.send([]);
       }
 
+      app.get('/carts/:id', async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) }
+        console.log(id);
+        const result = await cartCollection.findOne(query);
+        res.send(result);
+      })
+
       const decodedEmail = req.decoded.email;
       if(email !== decodedEmail){
-        return res.status(401).send({error: true, message: 'forbidden access'})
+        return res.status(403).send({error: true, message: 'forbidden access'})
       }
       const query = { email: email };
       const result = await cartCollection.find(query).toArray();
@@ -208,6 +216,36 @@ async function run() {
       const result = await cartCollection.deleteOne(query);
       res.send(result);
     });
+
+    
+    //   instructor api
+    app.get('/savedusers/instructor/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        return res.send({ instructor: false })
+      }
+      const query = { email: email }
+      const user = await savedusersCollection.findOne(query);
+      const result = { instructor: user?.role === 'instructor' }
+      res.send(result);
+    })
+    app.get('/instructors', async (req, res) => {
+      const result = await userCollection.find().limit(6).toArray();
+      res.send(result);
+    })
+
+    app.post('/instructors', async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email }
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send('User already exists')
+      }
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    })
+
 
     // Send a ping to confirm a successful connection
     await client.db('admin').command({ ping: 1 });
