@@ -138,11 +138,11 @@ async function run() {
 
     // classes related APIs
     app.get('/classes', async (req, res) => {
-      const result = await classCollection.find().toArray();
+      const result = await classCollection.find().sort({ students: -1}).toArray();
       res.send(result);
     });
 
-    app.post('/classes', verifyJWT, verifyAdmin, async(req, res) => {
+    app.post('/classes', verifyJWT, verifyInstructor, async(req, res) => {
       const classItem = req.body;
       console.log(classItem)
       const result = await classCollection.insertOne(classItem)
@@ -151,7 +151,6 @@ async function run() {
 
     app.put('/classes/approved/:id', async (req, res) => {
       const id = req.params.id;
-
       const query = { _id: new ObjectId(id) }
       const updateDoc = {
         $set: {
@@ -175,15 +174,15 @@ async function run() {
       res.send(result);
     })
 
-    // users related APIs
-    app.get('/users', async (req, res) => {
-      const result = await userCollection.find().toArray();
-      res.send(result);
-    });
+    // // users related APIs
+    // app.get('/users', async (req, res) => {
+    //   const result = await userCollection.find().toArray();
+    //   res.send(result);
+    // });
 
     // cart collection apis
     app.get('/carts', verifyJWT, async (req, res) => {
-      const email = req.query.email;
+      const email = req.query?.email;
       if (!email) {
         res.send([]);
       }
