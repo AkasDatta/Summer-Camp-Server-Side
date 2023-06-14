@@ -99,14 +99,13 @@ async function run() {
 
     app.put('/users/instructors/:id', async (req, res) => {
       const id = req.params.id;
-
       const query = { _id: new ObjectId(id) }
       const updateDoc = {
         $set: {
           role: 'instructor'
         },
       };
-      const result = await usersCollection.updateOne(query, updateDoc);
+      const result = await savedusersCollection.updateOne(query, updateDoc);
       res.send(result);
     })
 
@@ -125,14 +124,14 @@ async function run() {
     
     app.patch('/savedusers/admin/:id', async (req, res) => {
       const id = req.params.id;
-      const filter = {_id: new ObjectId(id)};
+      const query = {_id: new ObjectId(id)};
       const updateDoc = {
         $set: {
           role: 'admin'
         }
       };
 
-      const result = await savedusersCollection.updateOne(filter, updateDoc);
+      const result = await savedusersCollection.updateOne(query, updateDoc);
       res.send(result);
     })
 
