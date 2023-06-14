@@ -62,8 +62,18 @@ async function run() {
     const verifyAdmin = async(req, res, next) => {
       const email = req.decoded.email;
       const query = {email: email}
-      const user = await userCollection.findOne(query);
+      const user = await savedusersCollection.findOne(query);
       if(user?.role !== 'admin'){
+        return res.status(403).send({error: true, message: 'forbidden message'});
+      }
+      next();
+    }
+
+    const verifyInstructor = async(req, res, next) => {
+      const email = req.decoded.email;
+      const query = {email: email}
+      const user = await savedusersCollection.findOne(query);
+      if(user?.role !== 'instructor'){
         return res.status(403).send({error: true, message: 'forbidden message'});
       }
       next();
@@ -86,6 +96,19 @@ async function run() {
       const result = await savedusersCollection.insertOne(saveduser);
       res.send(result);
     });
+
+    app.put('/users/instructors/:id', async (req, res) => {
+      const id = req.params.id;
+
+      const query = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          role: 'instructor'
+        },
+      };
+      const result = await usersCollection.updateOne(query, updateDoc);
+      res.send(result);
+    })
 
     app.get('/savedusers/admin/:email', verifyJWT, async(req, res) => {
       const email = req.params.email;
