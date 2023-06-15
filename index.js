@@ -46,7 +46,7 @@ async function run() {
     // Connect the client to the server (optional starting in v4.7)
     await client.connect();
 
-    const savedusersCollection = client.db('summerDb').collection('savedusers');
+    const savedusersCollection = client.db('summerDb').collection('users');
     const classCollection = client.db('summerDb').collection('classes');
     const userCollection = client.db('summerDb').collection('users');
     const cartCollection = client.db('summerDb').collection('carts');
@@ -72,7 +72,7 @@ async function run() {
     const verifyInstructor = async(req, res, next) => {
       const email = req.decoded.email;
       const query = {email: email}
-      const user = await savedusersCollection.findOne(query);
+      const user = await userCollection.findOne(query);
       if(user?.role !== 'instructor'){
         return res.status(403).send({error: true, message: 'forbidden message'});
       }
@@ -108,10 +108,9 @@ async function run() {
       const result = await savedusersCollection.updateOne(query, updateDoc);
       res.send(result);
     })
-
+// verifying admin 
     app.get('/savedusers/admin/:email', verifyJWT, async(req, res) => {
-      const email = req.params.email;
-
+      const {email} = req.params;
       if (req.decoded.email !== email){
         res.send({admin: false})
       }
@@ -121,6 +120,20 @@ async function run() {
       const result = {admin: user?.role === 'admin'}
       res.send(result);
     })
+
+    // verifying insrtuctor 
+    app.get('/users/instructor/:email', verifyJWT, async(req, res) => {
+      const {email} = req.params;
+      if (req.decoded.email !== email){
+        res.send({admin: false})
+      }
+
+      const query = {email: email}
+      const user = await userCollection.findOne(query);
+      const result = {instructor: user?.role === 'instructor'}
+      res.send(result);
+    })
+    
     
     app.patch('/savedusers/admin/:id', async (req, res) => {
       const id = req.params.id;
@@ -181,16 +194,37 @@ async function run() {
     // });
 
     // cart collection apis
+
     app.get('/carts', verifyJWT, async (req, res) => {
       const email = req.query?.email;
       if (!email) {
+        return res.send([]);
+      }
+    
+      const decodedEmail = req.decoded.email;
+      if (email !== decodedEmail) {
+        return res.status(403).send({ error: true, message: 'forbidden access' });
+      }
+    
+      const query = { email: email };
+      const result = await cartCollection.find(query).toArray();
+      res.send(result);
+    });
+    
+
+
+    app.get('/carts', verifyJWT, async (req, res) => {
+      const email = req.query?.email;
+      if (!email) {
+        console.log(email);
         res.send([]);
       }
+
+      
 
       app.get('/carts/:id', async (req, res) => {
         const id = req.params.id;
         const query = { _id: new ObjectId(id) }
-        console.log(id);
         const result = await cartCollection.findOne(query);
         res.send(result);
       })
@@ -218,18 +252,13 @@ async function run() {
     });
 
     
-    //   instructor api
-    app.get('/savedusers/instructor/:email', verifyJWT, async (req, res) => {
-      const email = req.params.email;
-
-      if (req.decoded.email !== email) {
-        return res.send({ instructor: false })
-      }
-      const query = { email: email }
-      const user = await savedusersCollection.findOne(query);
-      const result = { instructor: user?.role === 'instructor' }
-      res.send(result);
+    //   get all users api
+    app.get('/users', verifyJWT, verifyAdmin, async(req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result)
     })
+
+// IUnstructors
     app.get('/instructors', async (req, res) => {
       const result = await userCollection.find().limit(6).toArray();
       res.send(result);
